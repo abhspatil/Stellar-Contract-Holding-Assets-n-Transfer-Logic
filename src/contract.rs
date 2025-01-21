@@ -67,6 +67,21 @@ impl Token {
         TokenUtils::new(&e).events().set_admin(admin, new_admin);
     }
 
+    // Transfer Holding Assets from Contract Address to Given Destination Address
+    pub fn self_transfer(e: Env, to: Address, amount: i128) {
+        check_nonnegative_amount(amount);
+
+        let from = e.current_contract_address();
+
+        e.storage()
+            .instance()
+            .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+
+        spend_balance(&e, from.clone(), amount);
+        receive_balance(&e, to.clone(), amount);
+        TokenUtils::new(&e).events().transfer(from, to, amount);
+    }
+
     #[cfg(test)]
     pub fn get_allowance(e: Env, from: Address, spender: Address) -> Option<AllowanceValue> {
         let key = DataKey::Allowance(AllowanceDataKey { from, spender });
